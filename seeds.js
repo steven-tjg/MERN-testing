@@ -21,7 +21,6 @@ let data = [
 ];
  
 let seedDB = () => {
-   //Remove all campgrounds
    Campground.deleteMany({}, (err) => {
         if(err){
             console.log(err);
@@ -32,14 +31,12 @@ let seedDB = () => {
                 console.log(err);
             }
             console.log("removed comments!");
-             //add a few campgrounds
             data.forEach((seed) => {
                 Campground.create(seed, (err, campground) => {
                     if(err) {
                         console.log(err);
                     } else {
                         console.log("added a campground");
-                        // create a comment
                         Comment.create(
                             {
                                 text: "This place is great, but I wish there was internet",
@@ -58,7 +55,6 @@ let seedDB = () => {
             });
         });
     }); 
-    //add a few comments
 };
  
 module.exports = seedDB;
