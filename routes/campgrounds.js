@@ -9,6 +9,24 @@ let isLoggedIn = (req, res, next) => {
     res.redirect("/login");
 };
 
+let checkAuthOwnership = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        Campground.findById(req.params.id, (err, data) => {
+            if (err) {
+                res.redirect("back");
+            } else {
+                if (data.author.id.equals(req.user._id)) {
+                    next();
+                } else {
+                    res.redirect("back");
+                }
+            }
+        });
+    } else {
+        res.redirect("/login");
+    }
+};
+
 router.get("/", (req, res) => {
     Campground.find({}, (err, campgrounds) => {
         if (err) {
@@ -23,7 +41,7 @@ router.post("/", isLoggedIn, (req, res) => {
     let name =  req.body.name;
     let image = req.body.image;
     let description = req.body.description;
-    let author = {id: req.user._id, username: req.user.username}
+    let author = {id: req.user._id, username: req.user.username};
     let newCampground = {name: name, image: image, description: description, author: author};
     Campground.create(newCampground, (err, campground) => {
         if (err) {
@@ -43,8 +61,37 @@ router.get("/:id", (req, res) => {
         if (err) {
             console.log(err);
         } else {
-            console.log(result);
             res.render("campgrounds/show.ejs", {campground: result});
+        }
+    });
+});
+
+router.get("/:id/edit", checkAuthOwnership, (req, res) => {
+    Campground.findById(req.params.id, (err, data) => {
+        if (err) {
+            res.redirect("back");
+        } else {
+            res.render("campgrounds/edit.ejs", {campground: data});
+        }
+    });
+});
+
+router.put("/:id", (req, res) => {
+    Campground.findByIdAndUpdate(req.params.id, req.body.campground, (err, campground) => {
+        if (err) {
+            res.redirect("/campgrounds");
+        } else {
+            res.redirect("/campgrounds/" + req.params.id);
+        }
+    });
+});
+
+router.delete("/:id", checkAuthOwnership, (req, res) => {
+    Campground.findByIdAndRemove(req.params.id, (err, result) => {
+        if (err) {
+            res.redirect("/campgrounds");
+        } else {
+            res.redirect("/campgrounds");
         }
     });
 });
